@@ -1,20 +1,39 @@
-var express = require('express');
-var cors = require('cors');
-require('dotenv').config()
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const multer = require('multer');
+const app = express();
 
-var app = express();
+// Basic Configuration
+const port = process.env.PORT || 3000;
 
+// Middleware
 app.use(cors());
-app.use('/public', express.static(process.cwd() + '/public'));
+app.use(express.static('public'));
 
-app.get('/', function (req, res) {
-  res.sendFile(process.cwd() + '/views/index.html');
+// Multer setup for file uploads
+const upload = multer({ dest: 'uploads/' });
+
+// Routes
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/views/index.html');
 });
 
+// Handle file upload and return metadata
+app.post('/api/fileanalyse', upload.single('upfile'), (req, res) => {
+  const file = req.file;
+  if (!file) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
 
+  res.json({
+    name: file.originalname,
+    type: file.mimetype,
+    size: file.size
+  });
+});
 
-
-const port = process.env.PORT || 3000;
-app.listen(port, function () {
-  console.log('Your app is listening on port ' + port)
+// Start server
+app.listen(port, () => {
+  console.log('Your app is listening on port ' + port);
 });
